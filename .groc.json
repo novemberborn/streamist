@@ -1,0 +1,12 @@
+{
+  "glob": [
+    "README.md",
+    "lib/main.js",
+    "lib/Streamist.js",
+    "lib/UnreadableStreamError.js",
+    "lib/EndOfStreamError.js"
+  ],
+  "github": false,
+  "out": "doc/",
+  "index": "README.md"
+}

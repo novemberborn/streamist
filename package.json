@@ -1,0 +1,59 @@
+{
+  "name": "streamist",
+  "version": "0.0.0",
+  "description": "Enables functional, promised-based interactions with Readable streams.",
+  "main": "lib/main.js",
+  "scripts": {
+    "test": "mocha",
+    "lint": "jshint --reporter node_modules/jshint-stylish/stylish.js .",
+    "doc": "grock",
+    "doc-publish": "grock --github"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/novemberborn/streamist"
+  },
+  "keywords": [
+    "promise",
+    "promises",
+    "Promises/A+",
+    "promises-aplus",
+    "deferred",
+    "deferreds",
+    "when",
+    "future",
+    "async",
+    "asynchronous",
+    "streaming",
+    "streams",
+    "readable",
+    "legendary"
+  ],
+  "author": {
+    "name": "Mark Wubben",
+    "url": "http://novemberborn.net"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/novemberborn/streamist/issues"
+  },
+  "homepage": "https://github.com/novemberborn/streamist",
+  "dependencies": {
+    "thenstream": "^1.0.0"
+  },
+  "peerDependencies": {
+    "legendary": "^1.0.0"
+  },
+  "devDependencies": {
+    "chai": "^1.9.1",
+    "jshint-stylish": "^0.1.5",
+    "jshint": "^2.4.4",
+    "mocha": "^1.18.2",
+    "sinon": "^1.9.1",
+    "chai-sentinels": "^1.0.0",
+    "legendary": "^1.0.0",
+    "grock": "^0.3.2",
+    "chai-as-promised": "^4.1.1",
+    "stream-array": "^0.1.3"
+  }
+}
