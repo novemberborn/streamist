@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EndOfStreamError - EndOfStreamError.js</title>
+
+  <link rel="stylesheet" href="../assets/style.css">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"/>
+  <meta name="groc-relative-root" content="../"/>
+  <meta name="groc-document-path" content="lib/EndOfStreamError.js"/>
+  
+</head>
+<body>
+  <div id="file-area">
+    <div id="meta">
+      <code class="file-path">
+      
+        <a href="https://github.com/novemberborn/streamist/blob/master/lib/EndOfStreamError.js">lib/EndOfStreamError.js</a>
+      
+      </code>
+    </div>
+    <div id="document">
+    
+      <div class="segment">
+      
+      
+        <div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+<span class="hljs-keyword">var</span> util = <span class="hljs-built_in">require</span>(<span class="hljs-string">'util'</span>);
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h1 id="endofstreamerror"><a href="#endofstreamerror" class="anchor"></a>EndOfStreamError</h1></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Instances of this class are used as rejection reasons when a stream ends
+while being consumed.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">EndOfStreamError</span><span class="hljs-params">()</span> {</span>}
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Extends <code>Error</code>.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">util.inherits(EndOfStreamError, <span class="hljs-built_in">Error</span>);
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Each instance will have a <code>name</code> property with a value of <code>&quot;end-of-stream&quot;</code>.
+However, the instances will not have stack traces.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">EndOfStreamError.prototype.name = <span class="hljs-string">'end-of-stream'</span>;
+EndOfStreamError.prototype.stack = <span class="hljs-literal">null</span>;</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Node should log the error as <code>[EndOfStreamError]</code>.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">EndOfStreamError.prototype.inspect = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-string">'[EndOfStreamError]'</span>;
+};
+
+module.exports = EndOfStreamError;
+</div></div>
+      
+      </div>
+    
+    </div>
+  </div>
+
+  <script src="../toc.js"></script>
+  <script src="../assets/libs.js"></script>
+  <script src="../assets/behavior.js"></script>
+</body>
+</html>

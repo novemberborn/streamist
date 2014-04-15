@@ -1,0 +1,1251 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Streamist(streamOrThenable) - Streamist.js</title>
+
+  <link rel="stylesheet" href="../assets/style.css">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"/>
+  <meta name="groc-relative-root" content="../"/>
+  <meta name="groc-document-path" content="lib/Streamist.js"/>
+  
+</head>
+<body>
+  <div id="file-area">
+    <div id="meta">
+      <code class="file-path">
+      
+        <a href="https://github.com/novemberborn/streamist/blob/master/lib/Streamist.js">lib/Streamist.js</a>
+      
+      </code>
+    </div>
+    <div id="document">
+    
+      <div class="segment">
+      
+      
+        <div class="code"><div class="wrapper"><span class="hljs-pi">'use strict'</span>;
+
+<span class="hljs-keyword">var</span> Readable = <span class="hljs-built_in">require</span>(<span class="hljs-string">'stream'</span>).Readable;
+
+<span class="hljs-keyword">var</span> Promise = <span class="hljs-built_in">require</span>(<span class="hljs-string">'legendary'</span>).Promise;
+<span class="hljs-keyword">var</span> Series = <span class="hljs-built_in">require</span>(<span class="hljs-string">'legendary'</span>).Series;
+<span class="hljs-keyword">var</span> Thenstream = <span class="hljs-built_in">require</span>(<span class="hljs-string">'thenstream'</span>).Thenstream;
+
+<span class="hljs-keyword">var</span> EndOfStreamError = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./EndOfStreamError'</span>);
+<span class="hljs-keyword">var</span> UnreadableStreamError = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./UnreadableStreamError'</span>);
+
+<span class="hljs-keyword">var</span> util = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./private/util'</span>);
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">ConsumptionState</span><span class="hljs-params">()</span> {</span>
+  <span class="hljs-keyword">this</span>.waiting = <span class="hljs-literal">null</span>;
+  <span class="hljs-keyword">this</span>.readable = <span class="hljs-literal">true</span>;
+  <span class="hljs-keyword">this</span>.reachedEnd = <span class="hljs-literal">false</span>;
+}
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h1 id="streamist-streamorthenable-"><a href="#streamist-streamorthenable-" class="anchor"></a>Streamist(streamOrThenable)</h1></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Enables functional interactions with Readable streams, inspired by
+Legendary&#39;s
+<a href="http://novemberborn.github.io/legendary/lib/series.js.html"><code>Series</code></a> class.</p>
+</div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p><code>streamOrThenable</code> is expected to be a Readable stream, or a thenable for
+one. <a href="https://github.com/novemberborn/thenstream">Thenstream</a> is used if
+<code>streamOrThenable</code> is not a stream.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Streamist</span><span class="hljs-params">(streamOrThenable)</span> {</span>
+  <span class="hljs-keyword">if</span> (!(<span class="hljs-keyword">this</span> <span class="hljs-keyword">instanceof</span> Streamist)) {
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Streamist(streamOrThenable);
+  }
+
+  <span class="hljs-keyword">var</span> state = <span class="hljs-keyword">this</span>._consumptionState = <span class="hljs-keyword">new</span> ConsumptionState();
+
+  <span class="hljs-keyword">var</span> stream = streamOrThenable;
+  <span class="hljs-keyword">if</span> (!util.isStreamLike(streamOrThenable)) {
+    stream = <span class="hljs-keyword">new</span> Thenstream(streamOrThenable);
+  }
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h2 id="streamist-stream"><a href="#streamist-stream" class="anchor"></a>Streamist#stream</h2></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Provides a reference to the underlying stream. Use this to set encoding,
+listen for <code>close</code> events, <code>unshift()</code>, <code>pipe()</code>, or otherwise interact
+with the stream.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">  <span class="hljs-keyword">this</span>.stream = stream;
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h2 id="streamist-complete"><a href="#streamist-complete" class="anchor"></a>Streamist#complete</h2></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p><code>Promise</code> instance that is fulfilled with <code>true</code> when the underlying stream
+has been completely consumed. If no stream could be determined the promise
+is rejected with a <code>TypeError</code> instance. If the stream emits the <code>error</code>
+event, the promise is rejected with the first argument as the rejection
+reason.</p>
+</div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>If the promise is cancelled, any active consumption operations are also
+cancelled, and no new consumptions can be started.</p>
+</div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Cancellation does not propagate to any <code>streamOrThenable</code> promise.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">  <span class="hljs-keyword">this</span>.complete = <span class="hljs-keyword">new</span> Promise(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(resolve, reject)</span> {</span>
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">onEnd</span><span class="hljs-params">()</span> {</span>
+      cleanup();
+      state.readable = <span class="hljs-literal">false</span>;
+      state.reachedEnd = <span class="hljs-literal">true</span>;
+      resolve(<span class="hljs-literal">true</span>);
+    }
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">onError</span><span class="hljs-params">(error)</span> {</span>
+      cleanup();
+      state.readable = <span class="hljs-literal">false</span>;
+      reject(error);
+    }
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">cleanup</span><span class="hljs-params">()</span> {</span>
+      stream.removeListener(<span class="hljs-string">'end'</span>, onEnd);
+      stream.removeListener(<span class="hljs-string">'error'</span>, onError);
+    }
+
+    stream.once(<span class="hljs-string">'end'</span>, onEnd);
+    stream.once(<span class="hljs-string">'error'</span>, onError);
+
+    <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+      cleanup();
+
+      state.readable = <span class="hljs-literal">false</span>;
+
+      <span class="hljs-keyword">if</span> (state.waiting) {
+        state.waiting.cancel();
+      }
+    };
+  });
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h2 id="streamist-cancel-"><a href="#streamist-cancel-" class="anchor"></a>Streamist#cancel()</h2></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Cancels any active consumption operations and prevents new ones from being
+started. Alias for <code>Streamist#complete.cancel()</code>.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">  <span class="hljs-keyword">this</span>.cancel = <span class="hljs-keyword">this</span>.complete.cancel;
+}
+module.exports = Streamist;
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h2 id="generic-consuming-instance-methods"><a href="#generic-consuming-instance-methods" class="anchor"></a>Generic consuming instance methods</h2></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h3 id="streamist-consumeobject-size-"><a href="#streamist-consumeobject-size-" class="anchor"></a>Streamist#consumeObject(size)</h3></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Returns a <code>Promise</code> instance that is fulfilled with the next <code>size</code> bytes
+consumed from the underlying stream, wrapped in an object containing a single
+<code>value</code> property. The promise remains pending until data becomes available.
+It is rejected if the stream emits an <code>error</code>, with the first argument as the
+rejection reason.</p>
+</div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Cancellation through <code>Streamist#cancel()</code> or <code>Streamist#complete.cancel()</code>
+will propagate to the returned promise.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">Streamist.prototype.consumeObject = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(size)</span> {</span>
+  <span class="hljs-keyword">var</span> state = <span class="hljs-keyword">this</span>._consumptionState;
+  <span class="hljs-keyword">if</span> (!state.readable) {</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>If the stream is no longer readable, the promise will be rejected with an
+<code>UnreadableStreamError</code> instance.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">    <span class="hljs-keyword">return</span> Promise.rejected(<span class="hljs-keyword">new</span> UnreadableStreamError());
+  }
+
+  <span class="hljs-keyword">var</span> self = <span class="hljs-keyword">this</span>;
+  <span class="hljs-keyword">var</span> stream = <span class="hljs-keyword">this</span>.stream;
+  <span class="hljs-keyword">var</span> waiting = state.waiting;
+  <span class="hljs-keyword">var</span> stillWaiting = <span class="hljs-literal">true</span>;
+
+  <span class="hljs-keyword">if</span> (!waiting) {
+    <span class="hljs-keyword">var</span> chunk = stream.read(size);
+    <span class="hljs-keyword">if</span> (chunk !== <span class="hljs-literal">null</span>) {
+      <span class="hljs-keyword">return</span> Promise.from({ value: chunk });
+    }
+
+    waiting = <span class="hljs-keyword">new</span> Promise(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(resolve, reject)</span> {</span>
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">onReadable</span><span class="hljs-params">()</span> {</span>
+        cleanup();
+        resolve();
+      }
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">onEnd</span><span class="hljs-params">()</span> {</span>
+        cleanup();</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>If the underlying stream ends, the promise will be rejected with an
+<code>EndOfStreamError</code> instance.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">        reject(<span class="hljs-keyword">new</span> EndOfStreamError());
+      }
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">onError</span><span class="hljs-params">(reason)</span> {</span>
+        cleanup();
+        reject(reason);
+      }
+      <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">cleanup</span><span class="hljs-params">()</span> {</span>
+        stillWaiting = <span class="hljs-literal">false</span>;
+        state.waiting = <span class="hljs-literal">null</span>;
+        stream.removeListener(<span class="hljs-string">'end'</span>, onEnd);
+        stream.removeListener(<span class="hljs-string">'error'</span>, onError);
+        stream.removeListener(<span class="hljs-string">'readable'</span>, onReadable);
+      }
+
+      stream.on(<span class="hljs-string">'end'</span>, onEnd);
+      stream.on(<span class="hljs-string">'error'</span>, onError);
+
+      <span class="hljs-comment">//Node v0.10: If the stream is ending (`end` has not yet been emitted),</span>
+      <span class="hljs-comment">//listening for `readable` will cause the listener to be invoked</span>
+      <span class="hljs-comment">//synchronously. This is fixed in v0.11, see</span>
+      <span class="hljs-comment">//&lt;https://github.com/joyent/node/pull/5865&gt;. Therefore only listen at the</span>
+      <span class="hljs-comment">//very end, so we can clean up the other listeners.</span>
+      stream.on(<span class="hljs-string">'readable'</span>, onReadable);
+
+      <span class="hljs-keyword">return</span> cleanup;
+    });
+
+    <span class="hljs-comment">//Only assign the promise if it hasn't resolved synchronously (see above).</span>
+    <span class="hljs-keyword">if</span> (stillWaiting) {
+      state.waiting = waiting;
+    }
+  }
+
+  <span class="hljs-keyword">return</span> waiting.fork().then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+    <span class="hljs-keyword">return</span> self.consumeObject(size);
+  });
+};
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h3 id="streamist-consume-size-"><a href="#streamist-consume-size-" class="anchor"></a>Streamist#consume(size)</h3></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Builds on top of <code>Streamist#consumeObject(size)</code>, but returns a promise
+for the value of the consumed object.</p>
+</div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>If the underlying stream is in object mode, and the object happens to be a
+promise or thenable, the returned promise will assimilate the object&#39;s state,
+remaining pending until it has done so. If the promise or thenable is
+rejected, so will the returned promise. It may be hard to differentiate
+rejection reasons coming from the stream or from an object.</p>
+</div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Each invocation still consumes the underlying stream, regardless of the
+state of a promise returned by a preceeding invocation.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">Streamist.prototype.consume = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(size)</span> {</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.consumeObject(size).then(util.extractValue);
+};
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h3 id="streamist-toarray-constructor-"><a href="#streamist-toarray-constructor-" class="anchor"></a>Streamist#toArray([constructor])</h3></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Completely consumes the underlying stream, resulting in an array containing
+each chunk. Returns a promise for that array. Specify <code>constructor</code> to
+control the promise subclass that&#39;s returned. Defaults to Legendary&#39;s
+<a href="http://novemberborn.github.io/legendary/lib/series.js.html"><code>Series</code></a>.</p>
+</div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>If the stream contains promise or thenable objects they&#39;ll be included in
+the array as-is.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">Streamist.prototype.toArray = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(constructor)</span> {</span>
+  <span class="hljs-keyword">var</span> arr = [];
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.each(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(chunk)</span> {</span>
+    arr.push(chunk);
+  }).yield(arr).to(constructor || Series);
+};
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h3 id="streamist-tobuffer-length-"><a href="#streamist-tobuffer-length-" class="anchor"></a>Streamist#toBuffer([length])</h3></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Completely consumes the underlying stream, returning a <code>Promise</code> instance for
+a concatenated buffer of all chunks. Pass <code>length</code> if you know the total
+length of the buffer ahead of time.</p>
+</div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Will behave unexpectedly if the stream does not contain buffers.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">Streamist.prototype.toBuffer = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(length)</span> {</span>
+  <span class="hljs-keyword">var</span> arr = [];
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.each(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(chunk)</span> {</span>
+    arr.push(chunk);
+  }).then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+    <span class="hljs-keyword">return</span> Buffer.concat(arr, length);
+  });
+};
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h2 id="non-streaming-iterators"><a href="#non-streaming-iterators" class="anchor"></a>Non-streaming iterators</h2></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Like Legendary&#39;s <code>Series</code> you can consume the underlying stream using
+iterator callbacks. They&#39;ll be called with each chunk. No other arguments are
+passed. If the underlying stream contains promises or thenables, they&#39;ll be
+passed to the iterator callbacks as-is, without being assimilated. The
+callbacks may return a value or a <code>Promise</code> instance. Unless noted otherwise,
+<code>thenables</code> are <em>not</em> assimilated.</p>
+</div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Parallelization controls the number of pending promises (as returned by
+an iterator callback) an operation is waiting on. Per operation no new
+callbacks are invoked when this number reaches the maximum concurrency, as
+specified in the <code>maxConcurrent</code> argument.</p>
+</div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h3 id="streamist-each-iterator-"><a href="#streamist-each-iterator-" class="anchor"></a>Streamist#each(iterator)</h3></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Iterates over each chunk in the underlying stream. Returns a <code>Promise</code>
+instance that is fulfilled with <code>undefined</code> when the iterating has completed.</p>
+</div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>The promise is rejected with an <code>UnreadableStreamError</code> instance if the
+stream cannot be consumed when the iteration is started.</p>
+</div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Cancellation of the promise propagates to pending promises returned by
+<code>iterator</code>.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">Streamist.prototype.each = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(iterator)</span> {</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.eachParallel(<span class="hljs-number">1</span>, iterator);
+};
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h3 id="streamist-eachparallel-maxconcurrent-iterator-"><a href="#streamist-eachparallel-maxconcurrent-iterator-" class="anchor"></a>Streamist#eachParallel(maxConcurrent, iterator)</h3></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>See <code>Streamist#each(iterator)</code>.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">Streamist.prototype.eachParallel = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(maxConcurrent, iterator)</span> {</span>
+  <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> maxConcurrent !== <span class="hljs-string">'number'</span>) {
+    <span class="hljs-keyword">return</span> Promise.rejected(<span class="hljs-keyword">new</span> <span class="hljs-built_in">TypeError</span>(<span class="hljs-string">'Missing max concurrency number.'</span>));
+  }
+  <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> iterator !== <span class="hljs-string">'function'</span>) {
+    <span class="hljs-keyword">return</span> Promise.rejected(<span class="hljs-keyword">new</span> <span class="hljs-built_in">TypeError</span>(<span class="hljs-string">'Missing iterator function.'</span>));
+  }
+
+  <span class="hljs-keyword">var</span> state = <span class="hljs-keyword">this</span>._consumptionState;
+  <span class="hljs-keyword">if</span> (!state.readable) {
+    <span class="hljs-keyword">return</span> Promise.rejected(<span class="hljs-keyword">new</span> UnreadableStreamError());
+  }
+
+  <span class="hljs-keyword">var</span> self = <span class="hljs-keyword">this</span>;
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Promise(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(resolve, reject)</span> {</span>
+    <span class="hljs-keyword">var</span> pendingPromises = [];
+
+    <span class="hljs-keyword">var</span> stopIteration = <span class="hljs-literal">false</span>;
+    <span class="hljs-keyword">var</span> running = <span class="hljs-number">0</span>;
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">oneCompleted</span><span class="hljs-params">()</span> {</span>
+      running--;
+      runConcurrent();
+    }
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">oneFailed</span><span class="hljs-params">(reason)</span> {</span>
+      <span class="hljs-keyword">if</span> (!stopIteration) {
+        stopIteration = <span class="hljs-literal">true</span>;
+        running = -<span class="hljs-number">1</span>;
+        reject(reason);
+      }
+    }
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">checkEnd</span><span class="hljs-params">(reason)</span> {</span>
+      <span class="hljs-keyword">if</span> (reason <span class="hljs-keyword">instanceof</span> EndOfStreamError) {
+        stopIteration = <span class="hljs-literal">true</span>;
+      } <span class="hljs-keyword">else</span> {
+        <span class="hljs-keyword">throw</span> reason;
+      }
+    }
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">callIterator</span><span class="hljs-params">(wrapped)</span> {</span>
+      <span class="hljs-keyword">var</span> result = iterator(wrapped.value);
+      <span class="hljs-comment">//Only return `result` if it is a promise, to avoid accidentally</span>
+      <span class="hljs-comment">//assimilating a thenable.</span>
+      <span class="hljs-keyword">return</span> Promise.isInstance(result) &amp;&amp; result;
+    }
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">runConcurrent</span><span class="hljs-params">()</span> {</span>
+      <span class="hljs-keyword">if</span> (stopIteration || state.reachedEnd) {
+        <span class="hljs-keyword">if</span> (running === <span class="hljs-number">0</span>) {
+          resolve();
+        }
+        <span class="hljs-keyword">return</span>;
+      }
+
+      <span class="hljs-keyword">if</span> (running &gt;= maxConcurrent) {
+        <span class="hljs-keyword">return</span>;
+      }
+
+      running++;
+
+      <span class="hljs-keyword">var</span> pending = self.consumeObject()
+        .then(callIterator, checkEnd)
+        .then(oneCompleted, oneFailed)
+        .then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+          pendingPromises.splice(pendingPromises.indexOf(pending), <span class="hljs-number">1</span>);
+        });
+      pendingPromises.push(pending);
+
+      <span class="hljs-keyword">if</span> (!state.waiting) {
+        runConcurrent();
+      }
+    }
+
+    process.nextTick(runConcurrent);
+
+    <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+      stopIteration = <span class="hljs-literal">true</span>;
+      running = -<span class="hljs-number">1</span>;
+      pendingPromises.slice().forEach(util.invokeCancel);
+    };
+  });
+};
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h3 id="streamist-detect-iterator-"><a href="#streamist-detect-iterator-" class="anchor"></a>Streamist#detect(iterator)</h3></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Iterates over the underlying stream, returning a <code>Promise</code> instance that will
+be fulfilled with the chunk for which <code>iterator</code> first returned a truey
+(promise fulfillment) value. If no match is found, the promise will be
+fulfilled with <code>undefined</code>.</p>
+</div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>If the chunk is a promise or thenable, only the detected chunk will be
+assimilated.</p>
+</div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Iteration is stopped when the promise is fulfilled. Relies on
+<code>Streamist#eachParallel()</code> for consuming the chunks.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">Streamist.prototype.detect = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(iterator)</span> {</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.detectParallel(<span class="hljs-number">1</span>, iterator);
+};
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h3 id="streamist-detectparallel-maxconcurrent-iterator-"><a href="#streamist-detectparallel-maxconcurrent-iterator-" class="anchor"></a>Streamist#detectParallel(maxConcurrent, iterator)</h3></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>See <code>Streamist#detect(iterator)</code>. Each promise returned by the iterator is
+racing the other promises to fulfill with a truey value first. The returned
+promise will be fulfilled with the chunk for which that promise was returned
+from <code>iterator</code>.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">Streamist.prototype.detectParallel = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(maxConcurrent, iterator)</span> {</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.eachParallel(maxConcurrent, util.shortcutDetect(iterator))
+    .then(util.makeUndefined, util.extractShortcutValue);
+};
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h3 id="streamist-some-iterator-"><a href="#streamist-some-iterator-" class="anchor"></a>Streamist#some(iterator)</h3></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Iterates over the underlying stream, returning a <code>Promise</code> instance that will
+be fulfilled with <code>true</code> if an iterator returns a truey (promise fulfillment)
+value, or <code>false</code> if no iterator does so.</p>
+</div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Iteration is stopped when the promise is fulfilled. Relies on
+<code>Streamist#eachParallel()</code> for consuming the chunks.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">Streamist.prototype.some = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(iterator)</span> {</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.someParallel(<span class="hljs-number">1</span>, iterator);
+};
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h3 id="streamist-someparallel-maxconcurrent-iterator-"><a href="#streamist-someparallel-maxconcurrent-iterator-" class="anchor"></a>Streamist#someParallel(maxConcurrent, iterator)</h3></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>See <code>Streamist#some(iterator)</code>.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">Streamist.prototype.someParallel = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(maxConcurrent, iterator)</span> {</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.eachParallel(maxConcurrent, util.shortcutSome(iterator))
+    .then(util.makeFalse, util.extractShortcutValue);
+};
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h3 id="streamist-every-iterator-"><a href="#streamist-every-iterator-" class="anchor"></a>Streamist#every(iterator)</h3></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Iterates over the underlying stream, returning a <code>Promise</code> instance that will
+be fulfilled with <code>true</code> if all iterations return a truey (promise
+fulfillment) value, or <code>false</code> when an iteration does not.</p>
+</div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Iteration is stopped when the promise is fulfilled. Relies on
+<code>Streamist#eachParallel()</code> for consuming the chunks.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">Streamist.prototype.every = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(iterator)</span> {</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.everyParallel(<span class="hljs-number">1</span>, iterator);
+};
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h3 id="streamist-everyparallel-maxconcurrent-iterator-"><a href="#streamist-everyparallel-maxconcurrent-iterator-" class="anchor"></a>Streamist#everyParallel(maxConcurrent, iterator)</h3></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>See <code>Streamist#every(iterator)</code>.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">Streamist.prototype.everyParallel = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(maxConcurrent, iterator)</span> {</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.eachParallel(maxConcurrent, util.shortcutNotEvery(iterator))
+    .then(util.makeTrue, util.extractShortcutValue);
+};
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h3 id="streamist-foldl-initialvalue-iterator-"><a href="#streamist-foldl-initialvalue-iterator-" class="anchor"></a>Streamist#foldl(initialValue, iterator)</h3></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Folds each chunk from the underlying stream into another value. At each
+stage, <code>iterator</code> is called with the result of the folding operation at that
+point, and the next chunk from the stream. Returns a <code>Promise</code> instance for
+the result of the folding operation.</p>
+</div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Unlike <code>Array#reduce()</code> the initial value must be passed as the first
+argument. <code>initialValue</code> may be a promise or even a thenable: <code>iterator</code>
+won&#39;t be called until <code>initialValue</code> has fulfilled. If it rejects, the
+returned promise is rejected with the same reason.</p>
+</div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Thenables returned by <code>iterator</code> are assimilated.</p>
+</div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>This method has no parallel equivalent. Use <code>Streamist#mapParallel()</code> to
+collect values concurrently, and then use this method with a synchronous
+iterator.</p>
+</div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Relies on <code>Streamist#eachParallel()</code> for consuming the chunks. Note that if
+the underlying stream contains promises or thenables, they&#39;ll be passed to
+<code>iterator</code> as-is, without being assimilated.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">Streamist.prototype.foldl = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(initialValue, iterator)</span> {</span>
+  <span class="hljs-keyword">var</span> self = <span class="hljs-keyword">this</span>;
+  <span class="hljs-keyword">return</span> Promise.from(initialValue).then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(result)</span> {</span>
+    <span class="hljs-keyword">return</span> self.eachParallel(<span class="hljs-number">1</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(chunk)</span> {</span>
+      <span class="hljs-keyword">return</span> Promise.from(iterator(result, chunk)).then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(value)</span> {</span>
+        result = value;
+      });
+    }).then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+      <span class="hljs-keyword">return</span> result;
+    });
+  });
+};
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h2 id="streaming-iterators"><a href="#streaming-iterators" class="anchor"></a>Streaming iterators</h2></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>The <code>map</code>, <code>filter</code> and <code>filterOut</code> methods return a new <code>Streamist</code>
+instance that streams the results of the operation. This impacts
+parallelization, since the results must be streamed in their original order.</p>
+</div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Parallelization is affected not only by the number of pending promises an
+operation is waiting on, but also by whether the results of previous
+callbacks have been pushed to the result stream. For instance, if the maximum
+concurrency is 3, and the first callback is returns a promise that remains
+pending longer than the second and third callbacks, the fourth callback won&#39;t
+be invoked until the promise returned by the first callback has fulfilled and
+been pushed to the result stream. Backpressure on the result stream thus also
+reduces the number of parallel callback invocations.</p>
+</div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Errors from the consumption of the original stream are emitted on the
+returned instance. If consumption of the returned instance is cancelled, so
+is consumption of the original stream.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">Streamist.prototype._streamResults = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(
+  maxConcurrent, iterator, testResult, streamOptions)</span> {</span>
+
+  <span class="hljs-keyword">var</span> resultStream = <span class="hljs-keyword">new</span> Readable(
+    streamOptions || util.getStreamOptions(<span class="hljs-keyword">this</span>.stream)
+  );
+  <span class="hljs-keyword">var</span> resultStreamist = <span class="hljs-keyword">new</span> <span class="hljs-keyword">this</span>.constructor(resultStream);
+
+  <span class="hljs-keyword">var</span> pressurePromise = <span class="hljs-literal">null</span>, relieveBackpressure = <span class="hljs-literal">null</span>;
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">applyBackpressure</span><span class="hljs-params">()</span> {</span>
+    <span class="hljs-keyword">return</span> pressurePromise || (pressurePromise = <span class="hljs-keyword">new</span> Promise(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(resolve)</span> {</span>
+      relieveBackpressure = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+        pressurePromise = relieveBackpressure = <span class="hljs-literal">null</span>;
+        resolve(<span class="hljs-literal">true</span>);
+      };
+    }));
+  }
+
+  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">pushResult</span><span class="hljs-params">(result, chunk)</span> {</span>
+    <span class="hljs-keyword">var</span> pushable = testResult(result);
+    <span class="hljs-keyword">if</span> (pushable === util.STREAM_CHUNK_INSTEAD) {
+      result = chunk;
+    }
+
+    <span class="hljs-keyword">if</span> (!pushable) {
+      <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+    }
+    <span class="hljs-keyword">return</span> resultStream.push(result) !== <span class="hljs-literal">false</span> || applyBackpressure();
+  }
+
+  <span class="hljs-keyword">var</span> self = <span class="hljs-keyword">this</span>;
+  <span class="hljs-keyword">var</span> consuming = <span class="hljs-literal">null</span>;
+  resultStream._read = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+    <span class="hljs-comment">//The original stream is only consumed once, though the result stream may</span>
+    <span class="hljs-comment">//apply backpressure. When it's ready for more data, all we need to do is</span>
+    <span class="hljs-comment">//relieve that pressure.</span>
+    <span class="hljs-keyword">if</span> (consuming) {
+      <span class="hljs-keyword">if</span> (relieveBackpressure) {
+        relieveBackpressure();
+      }
+      <span class="hljs-keyword">return</span>;
+    }
+
+    <span class="hljs-comment">//Starting point for the promise-chain that ensures each result is pushed in</span>
+    <span class="hljs-comment">//the order the original chunk was read, irrespective of which iteration</span>
+    <span class="hljs-comment">//completes first, or whether backpressure is applied.</span>
+    <span class="hljs-keyword">var</span> pushNext = Promise.from(<span class="hljs-literal">true</span>);
+
+    <span class="hljs-comment">//Consume the stream. We only start the iteration once and rely on</span>
+    <span class="hljs-comment">//`pushResult()` to manage backpressure.</span>
+    consuming = self.eachParallel(maxConcurrent, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(chunk)</span> {</span>
+      <span class="hljs-keyword">var</span> result = iterator(chunk);
+
+      <span class="hljs-comment">//Only assimilate promises, for consistency with Legendary's Series</span>
+      <span class="hljs-comment">//interface.</span>
+      <span class="hljs-keyword">if</span> (Promise.isInstance(result)) {
+        pushNext = pushNext.yield(result).then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(result)</span> {</span>
+          <span class="hljs-keyword">return</span> pushResult(result, chunk);
+        });
+      } <span class="hljs-keyword">else</span> {
+        pushNext = pushNext.then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+          <span class="hljs-keyword">return</span> pushResult(result, chunk);
+        });
+      }
+
+      <span class="hljs-keyword">return</span> pushNext;
+    }).then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+      <span class="hljs-comment">//Once all results have been pushed, end the stream.</span>
+      resultStream.push(<span class="hljs-literal">null</span>);
+    }).otherwise(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(reason)</span> {</span>
+      <span class="hljs-comment">//Any error from the iteration or the underlying stream will reach here.</span>
+      resultStream.emit(<span class="hljs-string">'error'</span>, reason);
+    });
+
+    <span class="hljs-comment">//Ensure consumption stops if the returned stream is cancelled.</span>
+    resultStreamist.complete.alsoCancels(consuming);
+  };
+
+  <span class="hljs-keyword">return</span> resultStreamist;
+};
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h3 id="streamist-map-iterator-options-"><a href="#streamist-map-iterator-options-" class="anchor"></a>Streamist#map(iterator, [options])</h3></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Maps each chunk in the underlying stream using <code>iterator</code>.</p>
+</div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Specify <code>options</code> to configure the stream that underlies the returned
+<code>Streamist</code> instance. Defaults to copying <code>encoding</code> and <code>objectMode</code> from
+the original underlying stream.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">Streamist.prototype.map = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(iterator, options)</span> {</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.mapParallel(<span class="hljs-number">1</span>, iterator, options);
+};
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h3 id="streamist-mapparallel-maxconcurrent-iterator-options-"><a href="#streamist-mapparallel-maxconcurrent-iterator-options-" class="anchor"></a>Streamist#mapParallel(maxConcurrent, iterator, [options])</h3></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>See <code>Streamist#map(iterator, [options])</code>.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">Streamist.prototype.mapParallel = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(maxConcurrent, iterator, options)</span> {</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>._streamResults(
+    maxConcurrent, iterator, util.testMapResult, options);
+};
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h3 id="streamist-filter-iterator-"><a href="#streamist-filter-iterator-" class="anchor"></a>Streamist#filter(iterator)</h3></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Filters each chunk in the underlying stream using <code>iterator</code>. The returned
+<code>Streamist</code> instance will only stream those chunks for which <code>iterator</code>
+returned a truey (promise fulfillment) value.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">Streamist.prototype.filter = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(iterator)</span> {</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.filterParallel(<span class="hljs-number">1</span>, iterator);
+};
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h3 id="streamist-filterparallel-maxconcurrent-iterator-"><a href="#streamist-filterparallel-maxconcurrent-iterator-" class="anchor"></a>Streamist#filterParallel(maxConcurrent, iterator)</h3></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>See <code>Streamist#filter(iterator)</code>.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">Streamist.prototype.filterParallel = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(maxConcurrent, iterator)</span> {</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>._streamResults(maxConcurrent, iterator, util.testFilterResult);
+};
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h3 id="streamist-filterout-iterator-"><a href="#streamist-filterout-iterator-" class="anchor"></a>Streamist#filterOut(iterator)</h3></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>Filters each chunk in the underlying stream using <code>iterator</code>. The returned
+<code>Streamist</code> instance will only stream those chunks for which <code>iterator</code>
+returned a falsey (promise fulfillment) value.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">Streamist.prototype.filterOut = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(iterator)</span> {</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.filterOutParallel(<span class="hljs-number">1</span>, iterator);
+};
+</div></div>
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><h3 id="streamist-filteroutparallel-maxconcurrent-iterator-"><a href="#streamist-filteroutparallel-maxconcurrent-iterator-" class="anchor"></a>Streamist#filterOutParallel(maxConcurrent, iterator)</h3></div>
+        </div>
+      
+      
+      </div>
+    
+      <div class="segment">
+      
+        <div class="comments ">
+          <div class="wrapper"><p>See <code>Streamist#filterOut(iterator)</code>.</p>
+</div>
+        </div>
+      
+      
+        <div class="code"><div class="wrapper">Streamist.prototype.filterOutParallel = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(maxConcurrent, iterator)</span> {</span>
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>._streamResults(maxConcurrent, iterator, util.testFilterOutResult);
+};
+</div></div>
+      
+      </div>
+    
+    </div>
+  </div>
+
+  <script src="../toc.js"></script>
+  <script src="../assets/libs.js"></script>
+  <script src="../assets/behavior.js"></script>
+</body>
+</html>
