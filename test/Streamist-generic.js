@@ -145,6 +145,14 @@ describe('Generic Streamist instance methods:', function() {
               return assert.isRejected(againPending, EndOfStreamError);
             });
 
+          it('rejects with `EndOfStreamError` if the stream has ended with ' +
+            'the first chunk',
+            function() {
+              stream.emitReadable();
+              stream.emitEnd();
+              return assert.isRejected(againPending, EndOfStreamError);
+            });
+
           it('rejects when the stream emits an error', function() {
             stream.emitError(sentinels.foo);
             return assert.isRejected(againPending, sentinels.Sentinel);
