@@ -341,6 +341,12 @@ will propagate to the returned promise.</p>
   }
 
   <span class="hljs-keyword">return</span> waiting.fork().then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+    <span class="hljs-keyword">if</span> (state.reachedEnd) {
+      <span class="hljs-comment">//The end could be reached as data has become available. Test for that</span>
+      <span class="hljs-comment">//here since the next call to `consumeObject` will reject with an</span>
+      <span class="hljs-comment">//`UnreadableStreamError`.</span>
+      <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> EndOfStreamError();
+    }
     <span class="hljs-keyword">return</span> self.consumeObject(size);
   });
 };
